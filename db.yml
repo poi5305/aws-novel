@@ -1,0 +1,56 @@
+Books:
+  config:
+    ReadCapacityUnits: 5
+    WriteCapacityUnits: 5
+  keys:
+    - key: bookId
+      keyType: HASH
+      attributeType: N
+  parameters:
+    title:
+      - update
+    classify:
+      - update
+    imageURL:
+      - update
+    postCount:
+      - update
+    pageCount:
+      - update
+    updatedPost:
+      - update
+    updatedPage:
+      - update
+    looksCount:
+      - update
+    likesCount:
+      - update
+    downloadCount:
+      - update
+    isFinish:
+      - update
+    source:
+      - update
+    updateTime:
+      - update
+
+Pages:
+  config:
+    ReadCapacityUnits: 5
+    WriteCapacityUnits: 5
+  keys:
+    - key: bookId
+      keyType: HASH
+      attributeType: N
+    - key: page
+      keyType: RANGE
+      attributeType: N
+  parameters:
+    wordsCount:
+      - add
+      - update
+    checksum:
+      - add
+      - update
+    updateTime:
+      - update

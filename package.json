@@ -1,0 +1,34 @@
+{
+  "name": "aws-novel",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/poi5305/aws-novel.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/poi5305/aws-novel/issues"
+  },
+  "homepage": "https://github.com/poi5305/aws-novel#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "eslint": "^3.17.1",
+    "eslint-config-airbnb": "^14.1.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^4.0.0",
+    "eslint-plugin-react": "^6.10.0",
+    "mocha": "^3.2.0"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.58.0",
+    "cheerio": "^0.22.0",
+    "lodash": "^4.17.4",
+    "scanf": "^0.7.3"
+  }
+}
