@@ -33,6 +33,7 @@ function* spiderBookListRunner(forumId, maxPage) {
   }
 }
 
+
 function* spiderBookBodys(bookHeader) {
   const bookId = bookHeader.bookId;
   const maxPage = bookHeader.pageCount;
@@ -58,6 +59,28 @@ function* spiderBookBodys(bookHeader) {
       .then(() => bookTable.updateItem(bookId, updateItem));
     })
     .pipe(() => { sleep.sleep(delayTime); })
+    .catch((err) => { console.log('Error', err); })
+    ;
+  }
+}
+
+function* spiderBooks(bookList) {
+  for (const bookId of bookList) {
+    yield fp
+    .pipe(fp.bind(parser.getThreadHtml, bookId, 1))
+    .pipe(parser.parseThreadHeader, null, [1])
+    .pipe(fp.bind(bookTable.updateItem, _.toNumber(bookId)))
+    .pipe(updateItem => updateItem.Attributes)
+    .pipe((bookHeader) => {
+      const postCount = _.get(bookHeader, 'postCount', 0);
+      const currentPost = _.get(bookHeader, 'updatedPost', 1);
+      if (postCount === currentPost) {
+        console.log('This book is update to date', bookId);
+      } else {
+        const runner = spiderBookBodys(bookHeader);
+        go(runner, runner.next());
+      }
+    })
     .catch((err) => { console.log('Error', err); })
     ;
   }
@@ -90,23 +113,8 @@ program
 .description('update a book with bookId')
 .action((bookId) => {
   console.log(`Update book: ${bookId}`);
-  fp
-  .pipe(fp.bind(parser.getThreadHtml, bookId, 1))
-  .pipe(parser.parseThreadHeader, null, [1])
-  .pipe(fp.bind(bookTable.updateItem, _.toNumber(bookId)))
-  .pipe(updateItem => updateItem.Attributes)
-  .pipe((bookHeader) => {
-    const postCount = _.get(bookHeader, 'postCount', 0);
-    const currentPost = _.get(bookHeader, 'updatedPost', 1);
-    if (postCount === currentPost) {
-      console.log('This book is update to date', bookId);
-    } else {
-      const runner = spiderBookBodys(bookHeader);
-      go(runner, runner.next());
-    }
-  })
-  .catch((err) => { console.log('Error', err); })
-  ;
+  const runner = spiderBooks([bookId]);
+  go(runner, runner.next());
 });
 
 program.parse(process.argv);
