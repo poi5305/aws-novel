@@ -98,9 +98,8 @@ ParserCK101.parseForum = (html) => {
 
 ParserCK101.parseThreadBody = (html) => {
   const $ = cheerio.load(html);
-  const $postList = $('#postlist').eq(0);
-  const updatedPage = _.toNumber($postList.find('.pg strong').eq(0).text());
-  const updatedPost = _.toNumber($postList.find('.postNum a em').last().text());
+  const updatedPage = _.toNumber($('.pg strong').eq(0).text());
+  const updatedPost = _.toNumber($('.postNum a em').last().text());
 
   const posts = $('*[id^=postmessage_]');
   const postPositions = [];
