@@ -86,7 +86,6 @@ ParserCK101.parseForum = (html) => {
         isFinish,
         imgURL,
         // web: 'ck101',
-        updateTime: Date.now(),
       });
     }
   });

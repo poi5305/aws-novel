@@ -6,6 +6,7 @@
         "import"
     ],
     "rules": {
+        "no-loop-func": "warn",
         "global-require": "warn",
         "max-len": "warn",
         "no-bitwise": "warn",
