@@ -30,7 +30,6 @@ BooksTable.addItem = (bookId, item) => {
   const filteredItem = BaseTable.pickItem(item, allowUpdateParameters);
   return BaseTable.addItem(tableName, _.merge({
     bookId,
-    createdTime: Date.now(),
   }, filteredItem));
 };
 
@@ -51,5 +50,7 @@ BooksTable.getItem = bookId => BaseTable.getItem(tableName, {
 BooksTable.deleteItem = bookId => BaseTable.deleteItem(tableName, {
   bookId,
 });
+
+BooksTable.scan = (limit, lastKey) => BaseTable.scan(tableName, limit, lastKey);
 
 module.exports = BooksTable;

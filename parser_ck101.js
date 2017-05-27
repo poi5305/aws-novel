@@ -36,8 +36,8 @@ ParserCK101.getForumHtml = (forumId, page) => {
   return getHttpsContent(URL);
 };
 
-ParserCK101.getThreadHtml = (forumId, page) => {
-  const URL = ParserCK101.toForumURL(forumId, page);
+ParserCK101.getThreadHtml = (threadId, page) => {
+  const URL = ParserCK101.toThreadURL(threadId, page);
   return getHttpsContent(URL);
 };
 
@@ -55,9 +55,9 @@ ParserCK101.isFinish = (title) => {
   return false;
 };
 
-ParserCK101.toThreadURL = (bookId, page) => `https://ck101.com/thread-${bookId}-${page}-1.html`;
+ParserCK101.toThreadURL = (bookId, page) => `thread-${bookId}-${page}-1.html`;
 
-ParserCK101.toForumURL = (forumId, page) => `https://ck101.com/forum-${forumId}-${page}.html`;
+ParserCK101.toForumURL = (forumId, page) => `forum-${forumId}-${page}.html`;
 
 ParserCK101.parseThreadURL = URL => sscanf(URL, '%s://ck101.com/thread-%d-%d-%d.html');
 
@@ -74,7 +74,7 @@ ParserCK101.parseForum = (html) => {
     const imgURL = $e.find('img').eq(0).attr('src');
     const classify = $e.find('div.blockTitle em').eq(0).text();
     const title = $e.find('div.blockTitle a').eq(1).text();
-    const pageCount = $e.find('.postInfo .tps a').last().text();
+    const pageCount = _.toNumber($e.find('.postInfo .tps a').last().text());
     const isFinish = ParserCK101.isFinish(title);
 
     if (classify !== '[版務公告]') {
@@ -82,10 +82,11 @@ ParserCK101.parseForum = (html) => {
         bookId,
         title,
         classify,
-        pageCount: _.toNumber(pageCount),
+        pageCount: (pageCount === 0 ? 1 : pageCount),
         isFinish,
         imgURL,
-        web: 'ck101',
+        // web: 'ck101',
+        updateTime: Date.now(),
       });
     }
   });
@@ -97,17 +98,23 @@ ParserCK101.parseForum = (html) => {
 
 ParserCK101.parseThreadBody = (html) => {
   const $ = cheerio.load(html);
+  const $postList = $('#postlist').eq(0);
+  const updatedPage = _.toNumber($postList.find('.pg strong').eq(0).text());
+  const updatedPost = _.toNumber($postList.find('.postNum a em').last().text());
+
   const posts = $('*[id^=postmessage_]');
-  const postStart = [];
+  const postPositions = [];
   let content = '';
   posts.each((idx, e) => {
-    postStart.push(content.length);
+    postPositions.push(content.length);
     content += _.replace($(e).text(), /&nbsp;/g, '');
   });
   const wordsCount = content.length;
   return {
     content,
-    postStart,
+    updatedPage,
+    updatedPost,
+    postPositions,
     wordsCount,
     checksum: wordsCount,
   };
@@ -120,26 +127,24 @@ ParserCK101.parseThreadHeader = (html) => {
   const title = $postList.find('h1').eq(0).text();
   const classify = $postList.find('h2').eq(0).text();
   const isFinish = ParserCK101.isFinish(title);
-  const updatedPage = _.toNumber($postList.find('.pg strong').eq(0).text());
-  const updatedPost = _.toNumber($postList.find('.postNum a em').last().text());
+
+  // $url = trim($html->find("link", 0)->href);
+  const URL = $('link').eq(0).attr('href');
+  const [, bookId] = ParserCK101.parseThreadURL(URL);
 
   const looksCount = _.toNumber($('.viewNum').text());
   const likesCount = _.toNumber($('.thankNum').text());
   const postCount = _.toNumber($('.replayNum').text());
   const pageCount = ParserCK101.getPageCount(postCount);
 
-  const updateTime = Date.now();
-
   const bookInfo = {
+    bookId,
     title,
     classify,
-    updatedPage,
-    updatedPost,
     isFinish,
-    updateTime,
   };
 
-  if (looksCount === 0) {
+  if (looksCount !== 0) {
     bookInfo.looksCount = looksCount;
     bookInfo.likesCount = likesCount;
     bookInfo.postCount = postCount;
@@ -149,4 +154,4 @@ ParserCK101.parseThreadHeader = (html) => {
   return bookInfo;
 };
 
-module.exports = ParserCK101();
+module.exports = ParserCK101;

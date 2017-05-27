@@ -22,7 +22,7 @@ BaseTable.updateItem = (tableName, key, item, allowUpadateParameters) => {
     Key: key,
     UpdateExpression: `set ${expression.expression}`,
     ExpressionAttributeValues: expression.expressionAttributeValues,
-    ReturnValues: 'UPDATED_NEW',
+    ReturnValues: 'ALL_NEW',
   };
   return BaseTable.getUpdatePromise(params);
 };
@@ -62,6 +62,19 @@ BaseTable.queryIndexItems = (tableName, indexName, key) => {
     ExpressionAttributeValues: expression.expressionAttributeValues,
   };
   return BaseTable.getQueryPromise(params);
+};
+
+BaseTable.scan = (tableName, limit, lastKey) => {
+  const params = {
+    TableName: tableName,
+  };
+  if (!_.isUndefined(limit)) {
+    params.Limit = limit;
+  }
+  if (!_.isUndefined(lastKey)) {
+    params.ExclusiveStartKey = lastKey;
+  }
+  return BaseTable.getScanPromise(params);
 };
 
 BaseTable.getExpressionValues = (item, allowParameters) => {
@@ -136,6 +149,12 @@ BaseTable.getQueryPromise = params => new Promise((resolve, reject) => {
     } else {
       BaseTable.promiseCallBack(resolve, reject, data.Items, err);
     }
+  });
+});
+
+BaseTable.getScanPromise = params => new Promise((resolve, reject) => {
+  docClient.scan(params, (err, data) => {
+    BaseTable.promiseCallBack(resolve, reject, data, err);
   });
 });
 
