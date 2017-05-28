@@ -14,34 +14,25 @@ function doResponse(callback, statusCode, body) {
   const response = {
     statusCode,
     body: JSON.stringify(body),
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true,
+    },
   };
   callback(null, response);
 }
 
-function doResponseUTF8(callback, statusCode, filename, buffer) {
+function doResponseData(callback, statusCode, filename, body) {
   const response = {
     statusCode,
-    body: buffer.toString('utf8'),
+    body,
     headers: {
       'Content-Type': 'application/force-download',
       'Content-Transfer-Encoding': 'Binary',
       'Content-Disposition': `filename*=UTF-8''${encodeURI(filename)}`,
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true,
     },
-    // isBase64Encoded: true,
-  };
-  callback(null, response);
-}
-
-function doResponseBASE64(callback, statusCode, filename, buffer) {
-  const response = {
-    statusCode,
-    body: buffer.toString('base64'),
-    headers: {
-      'Content-Type': 'application/octet-stream',
-      'Content-Transfer-Encoding': 'Binary',
-      'Content-Disposition': `filename*=UTF-8''${encodeURI(filename)}`,
-    },
-    isBase64Encoded: true,
   };
   callback(null, response);
 }
@@ -72,7 +63,16 @@ module.exports.getBooks = (event, context, callback) => {
 module.exports.getBooksInfo = (event, context, callback) => {
   const bookId = _.toNumber(_.get(event, 'pathParameters.bookId', 0));
   fp
-  .pipe(fp.bind(bookTable.getItem, bookId))
+  .pipe(() => new Promise((resolve) => {
+    const s3 = new AWS.S3();
+    const key = `${folder}/${bookId}/1.gzip`;
+    fp
+    .pipe(() => s3.getObject({ Bucket: novelBucket, Key: key }).promise())
+    .pipe(obj => obj.Body)
+    .pipe(zlib.gunzipSync)
+    .pipe(txtBuf => resolve(txtBuf.toString('utf8')))
+    ;
+  }))
   .pipe(fp.bind(doResponse, callback, 200))
   .catch(fp.bind(doResponse, callback, 400))
   ;
@@ -80,6 +80,7 @@ module.exports.getBooksInfo = (event, context, callback) => {
 
 module.exports.getBooksTXT = (event, context, callback) => {
   const s3 = new AWS.S3();
+  const compress = _.get(event, 'queryStringParameters.compress', false);
   const bookId = _.toNumber(_.get(event, 'pathParameters.bookId', 0));
   fp
   .pipe(fp.bind(bookTable.getItem, bookId), null, [1, 2])
@@ -88,7 +89,7 @@ module.exports.getBooksTXT = (event, context, callback) => {
     const maxPage = _.get(book, 'updatedPage', 0);
 
     let buffer = new Buffer(getBookHeaderText(book));
-    for (let page = 1; page <= 1; page += 1) {
+    for (let page = 1; page <= maxPage; page += 1) {
       const key = `${folder}/${bookId}/${page}.gzip`;
       yield fp
       .pipe(() => s3.getObject({ Bucket: novelBucket, Key: key }).promise())
@@ -102,8 +103,13 @@ module.exports.getBooksTXT = (event, context, callback) => {
     }
     return buffer;
   }))
-  .pipe(b => b)
-  .pipe(fp.bind(doResponseUTF8, callback, 200))
+  .pipe((b) => {
+    if (compress) {
+      return zlib.gzipSync(b).toString('base64');
+    }
+    return b.toString('utf8');
+  })
+  .pipe(fp.bind(doResponseData, callback, 200))
   .catch(fp.bind(doResponse, callback, 400))
   ;
 };
@@ -127,12 +133,8 @@ module.exports.getBooksEBook = (event, context, callback) => {
       }],
       tempDir: '/tmp/',
     };
-    // const imageURL = _.get(book, 'imageURL', undefined);
-    // if (!_.isUndefined) {
-    //   epubOption.cover = imageURL;
-    // }
 
-    for (let page = 1; page <= 1; page += 1) {
+    for (let page = 1; page <= maxPage; page += 1) {
       const key = `${folder}/${bookId}/${page}.gzip`;
       yield fp
       .pipe(() => s3.getObject({ Bucket: novelBucket, Key: key }).promise())
@@ -150,8 +152,8 @@ module.exports.getBooksEBook = (event, context, callback) => {
     }
     return new Epub(epubOption, '/tmp/tmp.epub').promise;
   }))
-  .pipe(() => fs.readFileSync('/tmp/tmp.epub'))
-  .pipe(fp.bind(doResponseBASE64, callback, 200))
+  .pipe(() => fs.readFileSync('/tmp/tmp.epub').toString('base64'))
+  .pipe(fp.bind(doResponseData, callback, 200))
   .catch(fp.bind(doResponse, callback, 400))
   ;
 };

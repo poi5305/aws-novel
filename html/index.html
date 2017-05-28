@@ -1,0 +1,277 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>卡提諾小說</title>
+
+<link rel="stylesheet" href="thirdparty/themes/css/jqtouch.css" title="jQTouch">
+<script src="thirdparty/src/lib/jquery-1.7.min.js" type="application/x-javascript" charset="utf-8"></script>
+<script src="thirdparty/src/jqtouch.js" type="text/javascript" charset="utf-8"></script>
+<script src="thirdparty/src/jqtouch-jquery.min.js" type="application/x-javascript" charset="utf-8"></script>
+
+<script>
+    var jQT = new $.jQTouch({
+        icon: 'ck101.png',
+        icon4: 'ck101.png',
+        addGlossToIcon: false,
+        startupScreen: 'jqt_startup.png',
+        statusBar: 'black-translucent',
+        themeSelectionSelector: '#jqt #themes ul',
+        preloadImages: []
+    });
+    var baseURL = 'https://efa1wte95m.execute-api.ap-northeast-1.amazonaws.com/dev/v1';
+    $(function(){
+        dlHref = "";
+        tid=0;
+        fp=1;
+        tp=1;
+        localStorage.dlHref = "";
+        if(localStorage.page==undefined)localStorage.page=1;
+        $("#last").html("<a href='#'>"+"目前頁數 "+localStorage.page+" 上一頁</a>");
+        $("#next").html("<a href='#'>"+"目前頁數 "+localStorage.page+" 下一頁</a>");
+        $("#last").bind("click",function(){
+            if(localStorage.page<=1)return 0;
+            localStorage.page--;
+            $("#last").html("<a href='#'>"+"目前頁數 "+localStorage.page+" 上一頁</a>");
+            $("#next").html("<a href='#'>"+"目前頁數 "+localStorage.page+" 下一頁</a>");
+            readList();
+        });
+        $("#next").bind("click",function(){
+            localStorage.page++;
+            $("#last").html("<a href='#'>"+"目前頁數 "+localStorage.page+" 上一頁</a>");
+            $("#next").html("<a href='#'>"+"目前頁數 "+localStorage.page+" 下一頁</a>");
+            readList();
+        });
+        $("#bookListUpd").click(function(){
+            readBookList();
+        });
+        $("#partDownload").bind("touchstart",function(){
+            $("#partDownload").attr("href","include/ck101_get.php?type=download&tid="+tid+"&partFrom="+$("#partFrom").val()+"&partTo="+$("#partTo").val());
+        });
+        $("#fullDownload").tap(function(){
+            localStorage["tid_"+tid] = "從"+fp+"到"+tp;
+            $("#bookRecord").html("上次下載記錄："+localStorage["tid_"+tid]);
+        });
+        $("#partDownload").tap(function(){
+            localStorage["tid_"+tid] = "從"+$("#partFrom").val()+"到"+$("#partTo").val();
+            $("#bookRecord").html("上次下載記錄："+localStorage["tid_"+tid]);
+        });
+        $("#deleteBook").tap(function(){
+            $.get("fqnovel.php?type=remove_book&page_url="+dlHref);
+            jQT.goBack();
+            readBookList();
+        });
+        $("#search").change(function(){
+            if($(this).val() == ""){
+                readList();
+            }else{
+                searchList();
+            }
+        });
+		$("#bookInfo").bind("touchstart click", function() {
+			var c = new Client("getBooksInfo").get(function(data) {
+				var obj = JSON.parse(data);
+				for (var k1 in obj) {
+					for (var k2 in obj[k1]) {
+						$("#" + k1 + "_" + k2).html(obj[k1][k2]);
+					}
+				}
+			});
+		});
+        readList();
+    });
+    
+    function readList(){
+        if($("#search").val() != "")
+        {
+            searchList();
+        }
+        else
+        {
+            var lastKey = localStorage['key' + localStorage.page];
+            var url = baseURL + '/books';
+            if (lastKey) {
+                url += '?lastBookId=' + lastKey;
+            }
+            $("#novelList").html("<li>讀取列表中...請稍後</li>");
+            $.get(url, function(data){
+                parser_novel_list(data.Items);
+                localStorage['key' + (+localStorage.page+1)] = data.LastEvaluatedKey.bookId;
+            })
+        }
+    }
+    function searchList(){
+        $("#novelList").html("<li>搜尋中...請稍後</li>");
+        var c = new Client("searchBook", $("#search").val(), localStorage.page).get(parser_novel_list);
+    }
+    function parser_novel_list(data)
+    {
+        var obj = data;
+        $("#novelList").html("");
+        for(var key in obj)
+        {
+            if (!obj[key]["downloadCount"]) obj[key]["downloadCount"] = 0;
+            if (!obj[key]["postCount"]) obj[key]["postCount"] = 0;
+            if (!obj[key]["looksCount"]) obj[key]["looksCount"] = 0;
+            if (!obj[key]["likesCount"]) obj[key]["likesCount"] = 0;
+            $("#novelList").append(function() {
+                if(!obj[key]["imageURL"]) obj[key]["imageURL"] = "https://ck101.com/static/image/common/nophoto.gif";
+                var html = "";
+                html+="<li class='arrow'>";
+                html+="<div style='float:left'><image style='width: 100px;' src="+obj[key]["imageURL"]+"></image></div>"
+                html+="<a href='#novelInfo' class='noveList' style='font-size:12px;'>";
+                html+=obj[key]["classify"] + " [下載/文章/人氣/喜愛]" + "[" + obj[key]["downloadCount"] 
+                	+ "/" + obj[key]["postCount"] + "/" + obj[key]["looksCount"] + "/" + + obj[key]["likesCount"] + "]";
+                html+="<br>";
+                html+=obj[key]["title"];
+                html+="</a>";
+                html+="</li>";  
+                return html;
+            });
+            $("#novelList").children().last().data("book", obj[key]);
+        }
+        $(".noveList").unbind();
+        $(".noveList").bind("touchstart click",function(){
+            var data = $(this).parent().data("book");
+            var info = $(this).html();
+            var bookId = data.bookId;
+            $("#noveInfoTitle").html(info);
+            $("#noveInfoContext").html("讀取中...請稍後");
+            if (data.updatedPage) {
+                $.get(baseURL + '/books/' + bookId + '/info', function(info){
+                    var html = "<div><image src="+data.imageURL+"></image></div>";
+                    html += "<div>"+info+"</div>";
+                    $("#noveInfoContext").html(html);
+                });
+            } else {
+                var html = "<div><image src="+data.imageURL+"></image></div>";
+                html += "<div>此書尚未下載完成，請稍待或回報</div>";
+                $("#noveInfoContext").html(html);
+            }
+            setDownload(data, info);
+        });
+    }
+
+    function setDownload(data, info) {
+        $("#download").unbind().bind("touchstart click",function(){
+            var url = baseURL + '/books/' + data.bookId + '/';
+            var turl = url + 'txt';
+            var eurl = url + 'ebook';
+            var gurl = turl.replace('https', 'ghttps');
+
+            console.log("setDownload", turl, eurl, gurl);
+
+            $("#fullDownload").attr("href", turl);
+
+            $("#efullDownload").attr('download', data.title + '.epub');
+            $("#efullDownload").bind("touchstart click", function(e){
+                e.preventDefault();
+                var jthis = $(this);
+                jthis.html("下載中，請稍等...(約20-40秒)");
+                jthis.attr('download', data.title + '.epub');
+                $.get(eurl, function(base64){
+                    var d = 'data:application/octet-stream;base64,' + base64;
+                    jthis.attr('href', d);
+                    jthis.html("下載完成，請再點擊一次");
+                    jthis.unbind('touchstart click');
+                    e.isDefaultPrevented = function(){ return false; };
+                    jthis.trigger(e);
+                });
+            });
+            $("#gfullDownload").attr("href", gurl);
+            $("#bookMangerInfo").html(info);
+
+            if(localStorage["tid_"+tid] == undefined){
+                $("#bookRecord").html("第一次下載此小說");
+            }else{
+                $("#bookRecord").html("上次下載記錄："+localStorage["tid_"+tid]);
+            }
+
+        });
+    }
+
+</script>
+</head>
+
+<body>
+    <div id="home">
+        <div class="toolbar">
+            <h1>卡提諾小說</h1>
+            <a id="bookInfo" href="#book" class="button">簡介</a>
+        </div>
+        <ul>
+            <li><input type="text" id="search" placeholder="搜尋" /></li>
+            <li id="last"></li>
+        </ul>
+        <ul id="novelList" class="edgetoedge">
+        </ul>
+        <ul><li id="next"></li></ul>
+    </div>
+    <div id="book">
+        <div class="toolbar">
+            <a href="#" class="back">首頁</a>
+            <h1>小說介紹</h1>
+        </div>
+        <ul class="rounded">
+            <li>現有小說數量</li>
+            <li><span id="downloaded_count"></span> 本</li>
+            <li><span id="downloaded_pages"></span> 頁</li>
+            <li><span id="downloaded_posts"></span> 章</li>
+        </ul>
+        <ul class="rounded">
+            <li>下載中小說數量</li>
+            <li><span id="downloading_count"></span> 本</li>
+            <li><span id="downloading_pages"></span> 頁</li>
+            <li><span id="downloading_posts"></span> 章</li>
+        </ul>
+        <ul class="rounded">
+            <li>已完結小說數量</li>
+            <li><span id="finishBook_count"></span> 本</li>
+            <li><span id="finishBook_pages"></span> 頁</li>
+            <li><span id="finishBook_posts"></span> 章</li>
+        </ul>
+        </div>
+    </div>
+    <div id="novelInfo">
+        <div class="toolbar">
+            <a href="#" class="back">首頁</a>
+            <h1>小說介紹</h1>
+            <a id="download" href="#bookManger" class="button">下載</a>
+        </div>
+        <div id="noveInfoTitle" style="background:#FFF; margin-bottom:10px; text-align:center;"></div>
+        <div id="noveInfoContext" style="padding:10px; ">
+        </div>
+    </div>
+    <div id="bookManger">
+        <div class="toolbar">
+            <a id="back" href="#" class="back">回書庫</a>
+            <h1>小說下載</h1>
+            <a id="bookUpd" href="#" class="button">更新</a>
+        </div>
+        <ul class="rounded">
+            <li id="bookMangerInfo"></li>
+            <li id="bookRecord"></li>
+        </ul>
+        <ul class="rounded">
+            <li>
+                從<input type="tel" id="partFrom" value="1" style="width:30px;" />
+                到<input type="tel" id="partTo" value="2" style="width:30px;" />
+            </li>
+            <!-- <li><a id="partDownload" target="_blank" href="#">分段下載此小說</a></li> -->
+            <li><a id="fullDownload" target="_blank" href="#">完整下載此小說 TXT</a></li>
+            <li><a id="efullDownload" target="_blank" href="#">完整下載此小說 ePub</a></li>
+            <!-- <li><a id="gpartDownload" target="_blank" href="#">GoodReader 分段下載</a></li> -->
+            <li><a id="gfullDownload" target="_blank" href="#">GoodReader 完整下載</a></li>
+        </ul>
+        <ul class="rounded">
+            
+        </ul>
+    </div>
+</body>
+</html>
+
+
+
+
+
+
