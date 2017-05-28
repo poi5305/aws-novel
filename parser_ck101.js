@@ -71,7 +71,7 @@ ParserCK101.parseForum = (html) => {
   threadRows.each((idx, e) => {
     const $e = $(e);
     const bookId = _.toNumber($e.attr('tid'));
-    const imgURL = $e.find('img').eq(0).attr('src');
+    const imageURL = $e.find('img').eq(0).attr('src');
     const classify = $e.find('div.blockTitle em').eq(0).text();
     const title = $e.find('div.blockTitle a').eq(1).text();
     const pageCount = _.toNumber($e.find('.postInfo .tps a').last().text());
@@ -84,7 +84,7 @@ ParserCK101.parseForum = (html) => {
         classify,
         pageCount: (pageCount === 0 ? 1 : pageCount),
         isFinish,
-        imgURL,
+        imageURL: (imageURL === '' ? null : imageURL),
         // web: 'ck101',
       });
     }
