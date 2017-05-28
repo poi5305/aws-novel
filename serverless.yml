@@ -1,0 +1,63 @@
+service: aws-novel
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  stage: dev
+  region: ap-northeast-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - 's3:ListBucket'
+      Resource:
+        'Fn::Join':
+          - ''
+          - - 'arn:aws:s3:::'
+            - Ref: ServerlessDeploymentBucket
+    - Effect: Allow
+      Action:
+        - 's3:PutObject'
+      Resource:
+        'Fn::Join':
+          - ''
+          - - 'arn:aws:s3:::'
+            - Ref: ServerlessDeploymentBucket
+            - /*
+    - Effect: Allow
+      Action:
+        - 'dynamodb:*'
+      Resource: 'arn:aws:dynamodb:${self:provider.region}:*:table/*'
+    - Effect: "Allow"
+      Action:
+        - "s3:GetObject"
+      Resource: "arn:aws:s3:::ck101-novels/*"
+
+functions:
+  getBooks:
+    handler: handler.getBooks
+    events:
+      - http:
+          cors: true
+          method: get
+          path: /v1/books
+  getBooksInfo:
+    handler: handler.getBooksInfo
+    events:
+      - http:
+          cors: true
+          method: get
+          path: /v1/books/{bookId}/info
+  getBooksTXT:
+    handler: handler.getBooksTXT
+    events:
+      - http:
+          cors: true
+          method: get
+          path: /v1/books/{bookId}/txt
+  getBooksEBook:
+    handler: handler.getBooksEBook
+    events:
+      - http:
+          cors: true
+          method: get
+          path: /v1/books/{bookId}/ebook
