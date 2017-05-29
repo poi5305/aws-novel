@@ -162,22 +162,7 @@
             console.log("setDownload", turl, eurl, gurl);
 
             $("#fullDownload").attr("href", turl);
-
-            $("#efullDownload").attr('download', data.title + '.epub');
-            $("#efullDownload").bind("touchstart click", function(e){
-                e.preventDefault();
-                var jthis = $(this);
-                jthis.html("下載中，請稍等...(約20-40秒)");
-                jthis.attr('download', data.title + '.epub');
-                $.get(eurl, function(base64){
-                    var d = 'data:application/octet-stream;base64,' + base64;
-                    jthis.attr('href', d);
-                    jthis.html("下載完成，請再點擊一次");
-                    jthis.unbind('touchstart click');
-                    e.isDefaultPrevented = function(){ return false; };
-                    jthis.trigger(e);
-                });
-            });
+            $("#efullDownload").attr("href", eurl);
             $("#gfullDownload").attr("href", gurl);
             $("#bookMangerInfo").html(info);
 
@@ -186,7 +171,6 @@
             }else{
                 $("#bookRecord").html("上次下載記錄："+localStorage["tid_"+tid]);
             }
-
         });
     }
 
