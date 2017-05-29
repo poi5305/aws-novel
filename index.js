@@ -11,7 +11,7 @@ const bookTable = require('./db_books.js');
 
 const novelBucket = 'ck101-novels';
 const folder = 'novels';
-const delayTime = 6;
+const delayTime = 7;
 
 function spiderBookListRunner(forumId, maxPage) {
   return co(function* () {
