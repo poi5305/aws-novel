@@ -96,7 +96,7 @@ ParserCK101.parseForum = (html) => {
 };
 
 ParserCK101.parseThreadBody = (html) => {
-  const $ = cheerio.load(html);
+  const $ = cheerio.load(html.replace('<div class="mbn">', '<div class="mbn"><div><div>'));
   const updatedPage = _.toNumber($('.pg strong').eq(0).text());
   const updatedPost = _.toNumber($('.postNum a em').last().text());
 
