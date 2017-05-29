@@ -30,6 +30,7 @@ provider:
     - Effect: "Allow"
       Action:
         - "s3:GetObject"
+        - "s3:PutObject"
       Resource: "arn:aws:s3:::ck101-novels/*"
 
 functions:
