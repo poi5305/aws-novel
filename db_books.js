@@ -53,4 +53,22 @@ BooksTable.deleteItem = bookId => BaseTable.deleteItem(tableName, {
 
 BooksTable.scan = (limit, lastKey) => BaseTable.scan(tableName, limit, lastKey);
 
+BooksTable.scanTitle = (title, limit, lastKey) => {
+  const params = {
+    TableName: tableName,
+    FilterExpression:
+      'contains(title, :title)',
+    ExpressionAttributeValues: {
+      ':title': title,
+    },
+  };
+  if (!_.isUndefined(limit)) {
+    params.Limit = limit;
+  }
+  if (!_.isUndefined(lastKey)) {
+    params.ExclusiveStartKey = lastKey;
+  }
+  return BaseTable.getScanPromise(params);
+};
+
 module.exports = BooksTable;

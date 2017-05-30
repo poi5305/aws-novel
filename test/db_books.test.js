@@ -96,4 +96,13 @@ describe('BooksDB', () => {
       console.log(err);
     });
   });
+
+  it('should scan Books item', (done) => {
+    BooksTable.scanTitle('歷史', 100).then((itmes) => {
+      console.log(itmes);
+      done();
+    }, (err) => {
+      console.log(err);
+    });
+  });
 });
