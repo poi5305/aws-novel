@@ -65,7 +65,8 @@ function genXHTML(title, body) {
 
 module.exports.getBooks = (event, context, callback) => {
   const limit = 10;
-  const lastBookId = _.toNumber(_.get(event, 'queryStringParameters.lastBookId', 0));
+  const lastBookId = _.get(event, 'queryStringParameters.lastBookId', undefined);
+  const search = _.get(event, 'queryStringParameters.lastBookId', undefined);
   let lastKey;
   if (lastBookId !== 0) {
     lastKey = { bookId: lastBookId };

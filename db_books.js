@@ -56,12 +56,11 @@ BooksTable.scan = (limit, lastKey) => BaseTable.scan(tableName, limit, lastKey);
 BooksTable.scanTitle = (title, limit, lastKey) => {
   const params = {
     TableName: tableName,
-    FilterExpression:
-      'contains(title, :title)',
-    ExpressionAttributeValues: {
-      ':title': title,
-    },
   };
+  if (!_.isUndefined(title)) {
+    params.FilterExpression = 'contains(title, :title)';
+    params.ExpressionAttributeValues = { ':title': title };
+  }
   if (!_.isUndefined(limit)) {
     params.Limit = limit;
   }
