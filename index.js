@@ -91,10 +91,13 @@ function spiderBooks(bookList) {
   });
 }
 
-function loopAllBooks() {
+function loopAllBooks(formBookId) {
   return co(function* () {
     const limit = 3;
     let lastKey;
+    if (formBookId) {
+      lastKey = { bookId: _.toNumber(formBookId) };
+    }
     let running = true;
     while (running) {
       yield fp
@@ -127,11 +130,11 @@ program
 });
 
 program
-.command('updateAllBooks')
+.command('updateAllBooks [formBookId]')
 .description('update all books content in db')
-.action(() => {
+.action((formBookId) => {
   console.log('Update all books');
-  loopAllBooks().catch((e) => { console.log(e); });
+  loopAllBooks(formBookId).catch((e) => { console.log(e); });
 });
 
 program

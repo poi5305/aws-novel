@@ -56,49 +56,49 @@ describe('BooksDB', () => {
     updateTime,
   };
 
-  it('should update Books item', (done) => {
-    BooksTable.updateItem(bookId, updateItem).then(() => {
-      done();
-    }, (err) => {
-      console.log(err);
-    });
-  });
+  // it('should update Books item', (done) => {
+  //   BooksTable.updateItem(bookId, updateItem).then(() => {
+  //     done();
+  //   }, (err) => {
+  //     console.log(err);
+  //   });
+  // });
 
-  it('should get Books item', (done) => {
-    BooksTable.getItem(bookId).then((item) => {
-      expect(item.noUseMessage).to.equal(undefined);
-      expect(item.bookId).to.equal(bookId);
-      expect(item.title).to.equal(title);
-      expect(item.classify).to.equal(classify);
-      expect(item.imageURL).to.equal(imageURL);
-      expect(item.postCount).to.equal(postCount);
-      expect(item.pageCount).to.equal(pageCount);
-      expect(item.updatedPost).to.equal(updatedPost);
-      expect(item.updatedPage).to.equal(updatedPage);
-      expect(item.looksCount).to.equal(looksCount);
-      expect(item.likesCount).to.equal(likesCount);
-      expect(item.downloadCount).to.equal(downloadCount);
-      expect(item.isFinish).to.equal(isFinish);
-      expect(item.web).to.equal(web);
-      expect(item.updateTime).to.equal(updateTime);
+  // it('should get Books item', (done) => {
+  //   BooksTable.getItem(bookId).then((item) => {
+  //     expect(item.noUseMessage).to.equal(undefined);
+  //     expect(item.bookId).to.equal(bookId);
+  //     expect(item.title).to.equal(title);
+  //     expect(item.classify).to.equal(classify);
+  //     expect(item.imageURL).to.equal(imageURL);
+  //     expect(item.postCount).to.equal(postCount);
+  //     expect(item.pageCount).to.equal(pageCount);
+  //     expect(item.updatedPost).to.equal(updatedPost);
+  //     expect(item.updatedPage).to.equal(updatedPage);
+  //     expect(item.looksCount).to.equal(looksCount);
+  //     expect(item.likesCount).to.equal(likesCount);
+  //     expect(item.downloadCount).to.equal(downloadCount);
+  //     expect(item.isFinish).to.equal(isFinish);
+  //     expect(item.web).to.equal(web);
+  //     expect(item.updateTime).to.equal(updateTime);
 
-      done();
-    }, (err) => {
-      console.log(err);
-    });
-  });
+  //     done();
+  //   }, (err) => {
+  //     console.log(err);
+  //   });
+  // });
 
 
-  it('should delete Books item', (done) => {
-    BooksTable.deleteItem(bookId).then(() => {
-      done();
-    }, (err) => {
-      console.log(err);
-    });
-  });
+  // it('should delete Books item', (done) => {
+  //   BooksTable.deleteItem(bookId).then(() => {
+  //     done();
+  //   }, (err) => {
+  //     console.log(err);
+  //   });
+  // });
 
   it('should scan Books item', (done) => {
-    BooksTable.scanTitle('歷史', 100).then((itmes) => {
+    BooksTable.scanTitle('歷史', 10).then((itmes) => {
       console.log(itmes);
       done();
     }, (err) => {
