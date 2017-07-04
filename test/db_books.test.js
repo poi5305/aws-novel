@@ -98,7 +98,7 @@ describe('BooksDB', () => {
   // });
 
   it('should scan Books item', (done) => {
-    BooksTable.scanTitle('歷史', 100).then((itmes) => {
+    BooksTable.scanTitle('歷史', 10).then((itmes) => {
       console.log(itmes);
       done();
     }, (err) => {

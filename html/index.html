@@ -62,11 +62,7 @@
             readBookList();
         });
         $("#search").change(function(){
-            if($(this).val() == ""){
-                readList();
-            }else{
-                searchList();
-            }
+            readList();
         });
 		$("#bookInfo").bind("touchstart click", function() {
 			var c = new Client("getBooksInfo").get(function(data) {
@@ -82,27 +78,27 @@
     });
     
     function readList(){
-        if($("#search").val() != "")
-        {
-            searchList();
+        var lastKey = localStorage['key' + localStorage.page];
+        var url = baseURL + '/books';
+        if (lastKey) {
+            url += '?lastBookId=' + lastKey;
+        } else {
+            url += '?lastBookId=0';
         }
-        else
-        {
-            var lastKey = localStorage['key' + localStorage.page];
-            var url = baseURL + '/books';
-            if (lastKey) {
-                url += '?lastBookId=' + lastKey;
-            }
-            $("#novelList").html("<li>讀取列表中...請稍後</li>");
-            $.get(url, function(data){
+        if($("#search").val() != "") {
+            url += '&search=' + $("#search").val();
+        }
+        $("#novelList").html("<li>讀取列表中...請稍後</li>");
+        $.get(url, function(data){
+            
+            if (data.Count == 0) {
+                console.log(data.Count)
+                $("#novelList").html("<li>找不到書本</li>");
+            } else {
                 parser_novel_list(data.Items);
-                localStorage['key' + (+localStorage.page+1)] = data.LastEvaluatedKey.bookId;
-            })
-        }
-    }
-    function searchList(){
-        $("#novelList").html("<li>搜尋中...請稍後</li>");
-        var c = new Client("searchBook", $("#search").val(), localStorage.page).get(parser_novel_list);
+            }
+            localStorage['key' + (+localStorage.page+1)] = data.LastEvaluatedKey.bookId;
+        })    
     }
     function parser_novel_list(data)
     {

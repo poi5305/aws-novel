@@ -64,18 +64,27 @@ function genXHTML(title, body) {
 }
 
 module.exports.getBooks = (event, context, callback) => {
-  const limit = 10;
-  const lastBookId = _.get(event, 'queryStringParameters.lastBookId', undefined);
-  const search = _.get(event, 'queryStringParameters.lastBookId', undefined);
+  let limit = 10;
+  const lastBookId = _.toNumber(_.get(event, 'queryStringParameters.lastBookId', 0));
+  const search = _.get(event, 'queryStringParameters.search', undefined);
   let lastKey;
   if (lastBookId !== 0) {
     lastKey = { bookId: lastBookId };
   }
-  fp
-  .pipe(fp.bind(bookTable.scan, limit, lastKey))
-  .pipe(fp.bind(doResponse, callback, 200))
-  .catch(fp.bind(doResponse, callback, 400))
-  ;
+  if (_.isUndefined(search)) {
+    fp
+    .pipe(fp.bind(bookTable.scan, limit, lastKey))
+    .pipe(fp.bind(doResponse, callback, 200))
+    .catch(fp.bind(doResponse, callback, 400))
+    ;
+  } else {
+    limit = Math.pow(10, search.length) * 2;
+    fp
+    .pipe(fp.bind(bookTable.scanTitle, search, limit, lastKey))
+    .pipe(fp.bind(doResponse, callback, 200))
+    .catch(fp.bind(doResponse, callback, 400))
+    ;
+  }
 };
 
 module.exports.getBooksInfo = (event, context, callback) => {
