@@ -13,6 +13,12 @@ function getHttpsContent(path) {
     };
     const req = https.request(options, (res) => {
       let html = '';
+      req.on('socket', (socket) => {
+        socket.setTimeout(30 * 1000);
+        socket.on('timeout', () => {
+          req.abort();
+        });
+      });
       res.on('data', (chunk) => {
         html += chunk;
       });

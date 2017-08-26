@@ -39,7 +39,9 @@ function spiderBookBodys(bookHeader) {
     currentPage += 1;
   }
   return co(function* () {
-    const s3 = new AWS.S3();
+    const s3 = new AWS.S3({
+      httpOptions: { connectTimeout: 3000, timeout: 60000 },
+    });
     for (let page = currentPage; page <= maxPage; page += 1) {
       console.log('Get book', bookId, 'page', page);
       yield fp
@@ -109,6 +111,10 @@ function loopAllBooks(formBookId) {
         return spiderBooks(bookList);
       })
       .pipe(() => { sleep.sleep(delayTime); })
+      .catch((err) => {
+        running = false;
+        console.log(err);
+      })
       .promise
       ;
     }
